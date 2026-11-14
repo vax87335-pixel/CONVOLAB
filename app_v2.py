@@ -1081,7 +1081,7 @@ if st.button(
 
 st.divider()
 st.caption(
-    "CONVOLAB Web v0.5 | "
-    "Proyecto académico de señales continuas"
+    "CONVOLAB Web v0.5 | Proyecto académico de señales continuas | "
+    "ig: vax._.07"
 )
 
