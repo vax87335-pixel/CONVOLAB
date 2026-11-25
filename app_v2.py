@@ -2759,12 +2759,8 @@ def simulador(
             k[0]
         )
 
-        frecuencia = (
-            0.45
-            if st.session_state["sim_play"]
-            else None
-        )
-
+        @st.fragment(run_every=0.8)
+        
         # --------------------------------------
         # Fragmento de actualizacion automatica
         # --------------------------------------
