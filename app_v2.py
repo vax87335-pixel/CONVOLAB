@@ -1,7 +1,7 @@
 
 import ast
-import warnings
 import math
+import warnings
 import streamlit as st
 import numpy as np
 import sympy as sp
@@ -11,8 +11,8 @@ from scipy.integrate import quad, IntegrationWarning
 from matplotlib.ticker import FixedLocator, FuncFormatter
 
 # ==============================================
-# CONVOLAB WEB v0.7
-# VERSION FINAL
+# CONVOLAB WEB v0.7.1
+# VERSION FINAL CORREGIDA
 # ==============================================
 
 st.set_page_config(
@@ -42,10 +42,7 @@ PERMITIDAS = {
 }
 
 st.title("📈 CONVOLAB")
-
-st.subheader(
-    "Laboratorio interactivo de señales"
-)
+st.subheader("Laboratorio interactivo de señales")
 
 st.caption(
     "Tiempo continuo · Expresiones analíticas · "
@@ -69,8 +66,7 @@ def interpretar(texto):
 
     if not texto or len(texto) > 500:
         raise ValueError(
-            "Escribe una expresión válida de "
-            "hasta 500 caracteres."
+            "Escribe una expresión de hasta 500 caracteres."
         )
 
     arbol = ast.parse(texto, mode="eval")
@@ -92,7 +88,6 @@ def interpretar(texto):
             isinstance(nodo, ast.Name)
             and nodo.id in PERMITIDAS
         ):
-
             valor = PERMITIDAS[nodo.id]
 
             if not callable(valor):
@@ -148,14 +143,13 @@ def interpretar(texto):
             funcion = PERMITIDAS[nodo.func.id]
 
             if callable(funcion):
-
                 return funcion(
                     convertir(nodo.args[0])
                 )
 
         raise ValueError(
-            "Utiliza únicamente las expresiones "
-            "indicadas en la guía rápida."
+            "Utiliza las expresiones indicadas "
+            "en la guía rápida."
         )
 
     expr = convertir(arbol.body)
@@ -164,10 +158,8 @@ def interpretar(texto):
         expr.has(sp.nan, sp.zoo)
         or expr.is_real is False
     ):
-
         raise ValueError(
-            "La expresión debe ser real "
-            "y estar definida."
+            "La expresión debe ser real y estar definida."
         )
 
     return expr
@@ -178,13 +170,11 @@ def interpretar_limite(texto):
     valor = interpretar(texto)
 
     if valor.free_symbols:
-
         raise ValueError(
             "El límite debe ser constante."
         )
 
     if valor.is_extended_real is not True:
-
         raise ValueError(
             "El límite debe ser real."
         )
@@ -198,9 +188,7 @@ def interpretar_limite(texto):
 
 def editor(nombre):
 
-    st.markdown(
-        f"### Señal {nombre}(t)"
-    )
+    st.markdown(f"### Señal {nombre}(t)")
 
     cantidad = st.number_input(
         "Número de tramos",
@@ -214,13 +202,9 @@ def editor(nombre):
 
     for i in range(cantidad):
 
-        st.markdown(
-            f"**Tramo {i+1}**"
-        )
+        st.markdown(f"**Tramo {i+1}**")
 
-        c1, c2, c3 = st.columns(
-            [2, 1, 1]
-        )
+        c1, c2, c3 = st.columns([2, 1, 1])
 
         with c1:
 
@@ -238,10 +222,7 @@ def editor(nombre):
                     i * (2 if nombre == "x" else 1)
                 ),
                 key=f"{nombre}_ini_{i}",
-                help=(
-                    "Para infinito negativo "
-                    "escribe -inf."
-                )
+                help="Para infinito negativo escribe -inf."
             )
 
         with c3:
@@ -253,10 +234,7 @@ def editor(nombre):
                     (2 if nombre == "x" else 1)
                 ),
                 key=f"{nombre}_fin_{i}",
-                help=(
-                    "Para infinito positivo "
-                    "escribe inf."
-                )
+                help="Para infinito positivo escribe inf."
             )
 
         try:
@@ -266,30 +244,24 @@ def editor(nombre):
             if expr.has(sp.oo, -sp.oo):
 
                 raise ValueError(
-                    "El infinito solamente puede "
-                    "utilizarse en los límites."
+                    "El infinito solamente se admite "
+                    "en los límites."
                 )
 
             a = interpretar_limite(inicio)
             b = interpretar_limite(final)
 
             if a >= b:
-
                 raise ValueError(
                     "El límite inferior debe ser "
                     "menor que el superior."
                 )
 
-            tramos.append(
-                (expr, a, b)
-            )
+            tramos.append((expr, a, b))
 
         except Exception as error:
 
-            st.error(
-                f"Tramo {i+1}: {error}"
-            )
-
+            st.error(f"Tramo {i+1}: {error}")
             return None
 
     tramos.sort(
@@ -297,8 +269,7 @@ def editor(nombre):
     )
 
     for anterior, actual in zip(
-        tramos,
-        tramos[1:]
+        tramos, tramos[1:]
     ):
 
         if anterior[2] > actual[1]:
@@ -313,7 +284,7 @@ def editor(nombre):
 
 
 # ==============================================
-# FORMATO MATEMATICO POR INTERVALOS
+# FORMATO MATEMATICO
 # ==============================================
 
 def formato_limite(valor):
@@ -455,9 +426,7 @@ def evaluar(
             continue
 
         funcion = sp.lambdify(
-            t,
-            expr,
-            "numpy"
+            t, expr, "numpy"
         )
 
         with np.errstate(all="ignore"):
@@ -493,7 +462,7 @@ def fronteras(tramos):
 
 
 # ==============================================
-# CONFIGURACION DE LOS EJES
+# CONFIGURACION DE EJES
 # ==============================================
 
 def configurar_eje_tiempo(
@@ -509,10 +478,7 @@ def configurar_eje_tiempo(
             "Selecciona un intervalo válido."
         )
 
-    ax.set_xlim(
-        minimo,
-        maximo
-    )
+    ax.set_xlim(minimo, maximo)
 
     ticks = list(
         range(
@@ -522,11 +488,7 @@ def configurar_eje_tiempo(
     )
 
     if not ticks:
-
-        ticks = [
-            minimo,
-            maximo
-        ]
+        ticks = [minimo, maximo]
 
     ax.xaxis.set_major_locator(
         FixedLocator(ticks)
@@ -567,8 +529,7 @@ def preparar_figura(fig):
         if any(
             a.x1 + 5 > b.x0
             for a, b in zip(
-                cajas,
-                cajas[1:]
+                cajas, cajas[1:]
             )
         ):
 
@@ -600,19 +561,14 @@ def dibujar(
     unir_saltos=True
 ):
 
-    divisiones = [
-        minimo,
-        maximo
-    ]
-
-    divisiones += [
-        x
-        for x in cortes
-        if minimo < x < maximo
-    ]
-
     divisiones = sorted(
-        set(divisiones)
+        set(
+            [minimo, maximo]
+            + [
+                x for x in cortes
+                if minimo < x < maximo
+            ]
+        )
     )
 
     for a, b in zip(
@@ -637,8 +593,7 @@ def dibujar(
         )
 
         ys = np.broadcast_to(
-            ys,
-            xs.shape
+            ys, xs.shape
         )
 
         ax.plot(
@@ -703,14 +658,8 @@ def dibujar(
     )
 
     ax.set_title(titulo)
-
-    ax.set_xlabel(
-        "Tiempo t"
-    )
-
-    ax.set_ylabel(
-        "Amplitud"
-    )
+    ax.set_xlabel("Tiempo t")
+    ax.set_ylabel("Amplitud")
 
     configurar_eje_tiempo(
         ax,
@@ -719,24 +668,18 @@ def dibujar(
         maximo
     )
 
-    ax.grid(
-        alpha=0.25
-    )
+    ax.grid(alpha=0.25)
 
 
 # ==============================================
 # OPERACIONES ANALITICAS POR TRAMOS
 # ==============================================
 
-def expresion_en(
-    tramos,
-    muestra
-):
+def expresion_en(tramos, muestra):
 
     for expr, a, b in tramos:
 
         if float(a) <= muestra < float(b):
-
             return expr
 
     return sp.S.Zero
@@ -745,15 +688,12 @@ def expresion_en(
 def punto_muestra(a, b):
 
     if a == -sp.oo and b == sp.oo:
-
         return 0.0
 
     if a == -sp.oo:
-
         return float(b) - 1
 
     if b == sp.oo:
-
         return float(a) + 1
 
     return (
@@ -764,12 +704,9 @@ def punto_muestra(a, b):
 def combinar_iguales(tramos):
 
     if not tramos:
-
         return []
 
-    resultado = [
-        tramos[0]
-    ]
+    resultado = [tramos[0]]
 
     for expr, a, b in tramos[1:]:
 
@@ -777,9 +714,7 @@ def combinar_iguales(tramos):
 
         if (
             fin == a
-            and sp.simplify(
-                expr - anterior
-            ) == 0
+            and sp.simplify(expr - anterior) == 0
         ):
 
             resultado[-1] = (
@@ -827,13 +762,8 @@ def operacion_analitica(
 
         muestra = punto_muestra(a, b)
 
-        fx = expresion_en(
-            x, muestra
-        )
-
-        fk = expresion_en(
-            k, muestra
-        )
+        fx = expresion_en(x, muestra)
+        fk = expresion_en(k, muestra)
 
         if operacion == "Suma":
 
@@ -853,13 +783,9 @@ def operacion_analitica(
             (expr, a, b)
         )
 
-    resultado = combinar_iguales(
-        resultado
-    )
-
     return [
         tramo
-        for tramo in resultado
+        for tramo in combinar_iguales(resultado)
         if tramo[0] != 0
     ]
 
@@ -928,8 +854,7 @@ def validar_intervalo(
         )
 
         valido = sp.Interval.open(
-            a,
-            b
+            a, b
         ).is_subset(dominio)
 
     except (
@@ -946,8 +871,7 @@ def validar_intervalo(
 
         raise ValueError(
             "La expresión contiene una discontinuidad "
-            "interna, singularidad o zona no real. "
-            "Divide la señal en esos puntos."
+            "interna, singularidad o zona no real."
         )
 
 
@@ -1007,17 +931,13 @@ def derivar_senal(tramos):
             if a < punto <= b:
 
                 izquierda = valor_finito(
-                    expr,
-                    punto,
-                    "-"
+                    expr, punto, "-"
                 )
 
             if a <= punto < b:
 
                 derecha = valor_finito(
-                    expr,
-                    punto,
-                    "+"
+                    expr, punto, "+"
                 )
 
         salto = sp.simplify(
@@ -1050,13 +970,9 @@ def integrar_senal(tramos):
 
     for expr, a, b in tramos:
 
-        validar_intervalo(
-            expr, a, b
-        )
+        validar_intervalo(expr, a, b)
 
-        limites.update(
-            (a, b)
-        )
+        limites.update((a, b))
 
     limites = sorted(
         limites,
@@ -1076,8 +992,7 @@ def integrar_senal(tramos):
         )
 
         primitiva = sp.integrate(
-            expr,
-            t
+            expr, t
         )
 
         if primitiva.has(sp.Integral):
@@ -1105,9 +1020,7 @@ def integrar_senal(tramos):
             continue
 
         referencia = valor_finito(
-            primitiva,
-            a,
-            "+"
+            primitiva, a, "+"
         )
 
         expr = sp.simplify(
@@ -1123,9 +1036,7 @@ def integrar_senal(tramos):
         if b != sp.oo:
 
             acumulado = valor_finito(
-                expr,
-                b,
-                "-"
+                expr, b, "-"
             )
 
     acumulado = sp.S.Zero
@@ -1136,9 +1047,7 @@ def integrar_senal(tramos):
             continue
 
         referencia = valor_finito(
-            primitiva,
-            b,
-            "-"
+            primitiva, b, "-"
         )
 
         expr = sp.simplify(
@@ -1154,9 +1063,7 @@ def integrar_senal(tramos):
         if a != -sp.oo:
 
             acumulado = valor_finito(
-                expr,
-                a,
-                "+"
+                expr, a, "+"
             )
 
     resultados.sort(
@@ -1201,17 +1108,13 @@ def editor_mixto(nombre):
     tramos = editor(nombre)
 
     if tramos is None:
-
         return None
 
     with st.expander(
-        f"Impulsos de Dirac de {nombre}(t) "
-        "(opcional)"
+        f"Impulsos de Dirac de {nombre}(t) (opcional)"
     ):
 
-        st.latex(
-            r"A\delta(t-a)"
-        )
+        st.latex(r"A\delta(t-a)")
 
         st.caption(
             "a: posición del impulso. "
@@ -1266,14 +1169,11 @@ def editor_mixto(nombre):
                         "deben ser finitos."
                     )
 
-                impulsos.append(
-                    (p, w)
-                )
+                impulsos.append((p, w))
 
             except Exception as error:
 
                 st.error(str(error))
-
                 return None
 
     return (
@@ -1283,7 +1183,7 @@ def editor_mixto(nombre):
 
 
 # ==============================================
-# EXPRESIONES ANALITICAS DE SEÑALES MIXTAS
+# FORMULAS DE SEÑALES MIXTAS
 # ==============================================
 
 def mostrar_formula(
@@ -1375,7 +1275,6 @@ def dibujar_impulsos(
     ]
 
     if not visibles:
-
         return
 
     lo, hi = ax.get_ylim()
@@ -1491,17 +1390,13 @@ def dibujar_extremos(
                 if a < p <= b:
 
                     izquierda = valor_finito(
-                        expr,
-                        p,
-                        "-"
+                        expr, p, "-"
                     )
 
                 if a <= p < b:
 
                     derecha = valor_finito(
-                        expr,
-                        p,
-                        "+"
+                        expr, p, "+"
                     )
 
             if sp.simplify(
@@ -1545,7 +1440,6 @@ def dibujar_extremos(
 
 # ==============================================
 # GRAFICAS MIXTAS
-# PARTE REGULAR + IMPULSOS
 # ==============================================
 
 def graficar_mixta(
@@ -1611,9 +1505,6 @@ def graficar_mixta(
 # ==============================================
 # TRANSFORMACION INTERNA
 # g(t) = A*f(B*t+D)
-#
-# D es el termino independiente interno.
-# Se conserva esta funcion para la convolucion.
 # ==============================================
 
 def transformar(
@@ -1679,12 +1570,8 @@ def transformar(
 
 
 # ==============================================
-# MANIPULACION v0.7
+# MANIPULACION FACTORIZADA
 # y(t) = A*f[B(t-C)]
-#
-# A: amplitud y/o inversion
-# B: escalamiento temporal y/o inversion
-# C: desplazamiento temporal
 # ==============================================
 
 def manipulacion_factorizada(
@@ -1694,11 +1581,6 @@ def manipulacion_factorizada(
     B,
     C
 ):
-
-    # A*f[B(t-C)]
-    # A*f(Bt-BC)
-    #
-    # D = -BC
 
     D = -B * C
 
@@ -1730,9 +1612,7 @@ def latex_manipulacion(
         else sp.latex(A)
     )
 
-    interior = sp.latex(
-        t - C
-    )
+    interior = sp.latex(t - C)
 
     if B == 1:
 
@@ -1769,10 +1649,7 @@ def latex_manipulacion(
 # OPERACIONES CON IMPULSOS
 # ==============================================
 
-def valor_continuo(
-    tramos,
-    p
-):
+def valor_continuo(tramos, p):
 
     izquierda = sp.S.Zero
     derecha = sp.S.Zero
@@ -1890,9 +1767,7 @@ def integrar_mixta(
             ])
 
     return (
-        sumar_tramos(
-            [reg] + extras
-        ),
+        sumar_tramos([reg] + extras),
         []
     )
 
@@ -1901,10 +1776,7 @@ def integrar_mixta(
 # CONVOLUCION NUMERICA
 # ==============================================
 
-def preparar_pares(
-    x,
-    k
-):
+def preparar_pares(x, k):
 
     pares = []
 
@@ -1956,7 +1828,6 @@ def convolucion_instante(
         )
 
         if inferior >= superior:
-
             continue
 
         integral, error = quad(
@@ -1975,8 +1846,7 @@ def convolucion_instante(
     if not np.isfinite(total):
 
         raise ValueError(
-            "La integral no produjo "
-            "un valor finito."
+            "La integral no produjo un valor finito."
         )
 
     return total
@@ -2005,9 +1875,7 @@ def convolucion_numerica(
         ]
     )
 
-    pares = preparar_pares(
-        x, k
-    )
+    pares = preparar_pares(x, k)
 
     valores = []
 
@@ -2037,10 +1905,7 @@ def convolucion_numerica(
 # PLAN DE CONVOLUCION ANALITICA
 # ==============================================
 
-def plan_convolucion(
-    x,
-    k
-):
+def plan_convolucion(x, k):
 
     cortes = {
         -sp.oo,
@@ -2078,9 +1943,7 @@ def plan_convolucion(
         cortes[1:]
     ):
 
-        muestra = punto_muestra(
-            a, b
-        )
+        muestra = punto_muestra(a, b)
 
         partes = []
 
@@ -2138,7 +2001,7 @@ def plan_convolucion(
 
 
 # ==============================================
-# RESOLUCION DE LAS INTEGRALES
+# RESOLUCION DE INTEGRALES
 # ==============================================
 
 def resolver_plan(plan):
@@ -2243,13 +2106,10 @@ def resolver_plan(plan):
 
 
 # ==============================================
-# CONVOLUCION CON IMPULSOS DE DIRAC
+# CONVOLUCION CON IMPULSOS
 # ==============================================
 
-def contribuciones_impulsos(
-    x,
-    k
-):
+def contribuciones_impulsos(x, k):
 
     xr, xi = x
     kr, ki = k
@@ -2292,7 +2152,7 @@ def contribuciones_impulsos(
 
 
 # ==============================================
-# DESARROLLO MATEMATICO DE LA CONVOLUCION
+# DESARROLLO MATEMATICO PASO A PASO
 # ==============================================
 
 def mostrar_desarrollo(
@@ -2336,9 +2196,7 @@ def mostrar_desarrollo(
             k[0], 1
         ):
 
-            st.write(
-                f"Tramo {i}"
-            )
+            st.write(f"Tramo {i}")
 
             st.latex(
                 rf"{movil}(-\tau)="
@@ -2355,9 +2213,7 @@ def mostrar_desarrollo(
 
             st.latex(
                 sp.latex(
-                    w * sp.DiracDelta(
-                        -u - p
-                    )
+                    w * sp.DiracDelta(-u - p)
                 )
             )
 
@@ -2369,9 +2225,7 @@ def mostrar_desarrollo(
             k[0], 1
         ):
 
-            st.write(
-                f"Tramo {i}"
-            )
+            st.write(f"Tramo {i}")
 
             st.latex(
                 rf"{movil}(t-\tau)="
@@ -2388,9 +2242,7 @@ def mostrar_desarrollo(
 
             st.latex(
                 sp.latex(
-                    w * sp.DiracDelta(
-                        t - u - p
-                    )
+                    w * sp.DiracDelta(t - u - p)
                 )
             )
 
@@ -2510,8 +2362,7 @@ def mostrar_desarrollo(
             for i, j, l, r, f, F, v in pasos:
 
                 st.markdown(
-                    f"Tramo fijo {i} "
-                    f"× tramo móvil {j}"
+                    f"Tramo fijo {i} × tramo móvil {j}"
                 )
 
                 st.latex(
@@ -2555,9 +2406,7 @@ def mostrar_desarrollo(
 
                     st.latex(
                         "="
-                        + sp.latex(
-                            sp.expand(v)
-                        )
+                        + sp.latex(sp.expand(v))
                     )
 
                 else:
@@ -2571,9 +2420,7 @@ def mostrar_desarrollo(
 
                 st.latex(
                     r"c_{\mathrm{reg}}(t)="
-                    + sp.latex(
-                        sp.expand(total)
-                    )
+                    + sp.latex(sp.expand(total))
                 )
 
         if x[1] or k[1]:
@@ -2615,10 +2462,16 @@ def mostrar_desarrollo(
 
 
 # ==============================================
-# SIMULADOR INTERACTIVO v0.7
+# SIMULADOR INTERACTIVO v0.7.1
 #
-# Reproduccion, pausa, STOP y reinicio.
-# No se utiliza un bucle bloqueante.
+# CORRECCION PRINCIPAL:
+# El instante de la animacion es independiente
+# del estado del widget slider.
+#
+# Los botones y las graficas pertenecen
+# al mismo fragmento.
+#
+# STOP y PAUSA conservan el instante actual.
 # ==============================================
 
 def simulador(
@@ -2644,21 +2497,27 @@ def simulador(
         st.caption(
             "Desplaza la señal móvil o utiliza "
             "los controles de reproducción. "
-            "STOP conserva el instante actual."
+            "STOP y Pausar conservan las gráficas "
+            "en el instante seleccionado."
         )
 
-        # --------------------------------------
-        # Estados de la animacion
-        # --------------------------------------
+        # ======================================
+        # INICIALIZACION DEL ESTADO
+        # ======================================
 
-        if st.session_state.get(
-            "sim_clave"
-        ) != clave:
+        if (
+            st.session_state.get("sim_clave")
+            != clave
+        ):
 
             st.session_state["sim_clave"] = clave
 
-            st.session_state["sim_t"] = float(
-                minimo
+            st.session_state["sim_instante"] = (
+                float(minimo)
+            )
+
+            st.session_state["sim_slider_v071"] = (
+                float(minimo)
             )
 
             st.session_state["sim_play"] = False
@@ -2667,21 +2526,38 @@ def simulador(
                 "Preparado"
             )
 
+            st.session_state["sim_saltar_paso"] = (
+                True
+            )
+
+        pares = preparar_pares(
+            x[0],
+            k[0]
+        )
+
+        # ======================================
+        # FUNCIONES DE LOS BOTONES
+        # ======================================
+
         def reproducir():
 
             if (
-                st.session_state["sim_t"]
+                st.session_state["sim_instante"]
                 >= maximo
             ):
 
-                st.session_state["sim_t"] = float(
-                    minimo
+                st.session_state["sim_instante"] = (
+                    float(minimo)
                 )
 
             st.session_state["sim_play"] = True
 
             st.session_state["sim_estado"] = (
                 "Reproduciendo"
+            )
+
+            st.session_state["sim_saltar_paso"] = (
+                True
             )
 
         def pausar():
@@ -2704,8 +2580,8 @@ def simulador(
 
             st.session_state["sim_play"] = False
 
-            st.session_state["sim_t"] = float(
-                minimo
+            st.session_state["sim_instante"] = (
+                float(minimo)
             )
 
             st.session_state["sim_estado"] = (
@@ -2716,492 +2592,579 @@ def simulador(
 
             st.session_state["sim_play"] = False
 
+            st.session_state["sim_instante"] = (
+                float(
+                    st.session_state[
+                        "sim_slider_v071"
+                    ]
+                )
+            )
+
             st.session_state["sim_estado"] = (
                 "Control manual"
             )
 
-        # --------------------------------------
-        # Controles de reproduccion
-        # --------------------------------------
-
-        c1, c2, c3, c4 = st.columns(4)
-
-        c1.button(
-            "▶ Reproducir",
-            key="sim_reproducir",
-            on_click=reproducir,
-            use_container_width=True
-        )
-
-        c2.button(
-            "⏸ Pausar",
-            key="sim_pausar",
-            on_click=pausar,
-            use_container_width=True
-        )
-
-        c3.button(
-            "⏹ STOP",
-            key="sim_detener",
-            on_click=detener,
-            use_container_width=True
-        )
-
-        c4.button(
-            "↺ Reiniciar",
-            key="sim_reiniciar",
-            on_click=reiniciar,
-            use_container_width=True
-        )
-
-        pares = preparar_pares(
-            x[0],
-            k[0]
-        )
+        # ======================================
+        # FRAGMENTO INDEPENDIENTE
+        #
+        # No se utiliza st.rerun() dentro
+        # de la reproduccion.
+        #
+        # No se utiliza un bucle bloqueante.
+        # ======================================
 
         @st.fragment(run_every=0.8)
-        
-        # --------------------------------------
-        # Fragmento de actualizacion automatica
-        # --------------------------------------
-
-        @st.fragment(
-            run_every=frecuencia
-        )
         def panel_animacion():
+
+            # ----------------------------------
+            # Actualizar solamente si reproduce
+            # ----------------------------------
 
             if st.session_state["sim_play"]:
 
-                paso = max(
-                    0.1,
-                    round(
-                        (maximo - minimo) / 40,
-                        1
+                if st.session_state.get(
+                    "sim_saltar_paso",
+                    False
+                ):
+
+                    st.session_state[
+                        "sim_saltar_paso"
+                    ] = False
+
+                else:
+
+                    paso = max(
+                        0.1,
+                        round(
+                            (maximo - minimo) / 40,
+                            1
+                        )
                     )
+
+                    nuevo = min(
+                        float(maximo),
+                        round(
+                            st.session_state[
+                                "sim_instante"
+                            ] + paso,
+                            1
+                        )
+                    )
+
+                    st.session_state[
+                        "sim_instante"
+                    ] = nuevo
+
+                    if nuevo >= maximo:
+
+                        st.session_state[
+                            "sim_play"
+                        ] = False
+
+                        st.session_state[
+                            "sim_estado"
+                        ] = "Finalizado"
+
+            # ----------------------------------
+            # Conservar el instante actual
+            # ----------------------------------
+
+            instante = float(
+                st.session_state[
+                    "sim_instante"
+                ]
+            )
+
+            instante = min(
+                float(maximo),
+                max(
+                    float(minimo),
+                    instante
                 )
+            )
 
-                nuevo = min(
-                    float(maximo),
-                    round(
-                        st.session_state["sim_t"]
-                        + paso,
-                        1
-                    )
-                )
+            st.session_state[
+                "sim_instante"
+            ] = instante
 
-                st.session_state["sim_t"] = nuevo
+            # Actualizar el widget antes
+            # de crearlo.
 
-                if nuevo >= maximo:
+            st.session_state[
+                "sim_slider_v071"
+            ] = instante
 
-                    st.session_state["sim_play"] = (
-                        False
-                    )
+            # ----------------------------------
+            # CONTROLES DE REPRODUCCION
+            # ----------------------------------
 
-                    st.session_state["sim_estado"] = (
-                        "Finalizado"
-                    )
+            c1, c2, c3, c4 = st.columns(4)
 
-                    st.rerun()
+            c1.button(
+                "▶ Reproducir",
+                key="sim_reproducir_v071",
+                on_click=reproducir,
+                use_container_width=True
+            )
 
-            instante = st.slider(
+            c2.button(
+                "⏸ Pausar",
+                key="sim_pausar_v071",
+                on_click=pausar,
+                use_container_width=True
+            )
+
+            c3.button(
+                "⏹ STOP",
+                key="sim_detener_v071",
+                on_click=detener,
+                use_container_width=True
+            )
+
+            c4.button(
+                "↺ Reiniciar",
+                key="sim_reiniciar_v071",
+                on_click=reiniciar,
+                use_container_width=True
+            )
+
+            # ----------------------------------
+            # CONTROL DESLIZANTE
+            # ----------------------------------
+
+            st.slider(
                 "Desplazamiento temporal t",
                 min_value=float(minimo),
                 max_value=float(maximo),
                 step=0.1,
-                key="sim_t",
+                key="sim_slider_v071",
                 on_change=movimiento_manual
             )
 
+            estado = st.session_state[
+                "sim_estado"
+            ]
+
             st.caption(
-                "Estado: "
-                + st.session_state["sim_estado"]
+                f"Estado: {estado} · "
+                f"t = {instante:.2f}"
             )
 
-            zr = sp.Rational(
-                str(instante)
-            )
-
-            xr, xi = x
-
-            # k(t-tau)
-            kr, ki = transformar(
-                k[0],
-                k[1],
-                sp.S.One,
-                -sp.S.One,
-                zr
-            )
-
-            cortes = sorted(
-                set(
-                    fronteras(xr)
-                    + fronteras(kr)
-                )
-            )
-
-            fig, axs = plt.subplots(
-                3,
-                1,
-                figsize=(11, 9)
-            )
+            # ==================================
+            # GRAFICAS DEL INSTANTE ACTUAL
+            #
+            # Se generan siempre, incluso
+            # cuando sim_play es False.
+            # ==================================
 
             try:
 
-                # ==============================
-                # GRAFICA 1: SUPERPOSICION
-                # ==============================
-
-                dibujar(
-                    axs[0],
-                    lambda q: evaluar(xr, q),
-                    cortes,
-                    minimo,
-                    maximo,
-                    "royalblue",
-                    f"Superposición: t = {instante:.2f}"
+                zr = sp.Rational(
+                    str(instante)
                 )
 
-                dibujar(
-                    axs[0],
-                    lambda q: evaluar(
-                        kr,
-                        q,
-                        invertido=True
-                    ),
-                    cortes,
-                    minimo,
-                    maximo,
-                    "seagreen",
-                    f"Superposición: t = {instante:.2f}"
+                xr, xi = x
+
+                kr, ki = transformar(
+                    k[0],
+                    k[1],
+                    sp.S.One,
+                    -sp.S.One,
+                    zr
                 )
 
-                axs[0].plot(
-                    [],
-                    [],
-                    color="royalblue",
-                    label=f"{fijo}(τ): señal fija"
+                cortes = sorted(
+                    set(
+                        fronteras(xr)
+                        + fronteras(kr)
+                    )
                 )
 
-                axs[0].plot(
-                    [],
-                    [],
-                    color="seagreen",
-                    label=f"{movil}(t−τ): señal móvil"
+                fig, axs = plt.subplots(
+                    3,
+                    1,
+                    figsize=(11, 9)
                 )
 
-                dibujar_impulsos(
-                    axs[0],
-                    xi,
-                    minimo,
-                    maximo,
-                    "royalblue",
-                    leyenda=False
-                )
+                try:
 
-                dibujar_impulsos(
-                    axs[0],
-                    ki,
-                    minimo,
-                    maximo,
-                    "seagreen",
-                    leyenda=False
-                )
+                    # ==========================
+                    # GRAFICA 1
+                    # SUPERPOSICION DE SEÑALES
+                    # ==========================
 
-                axs[0].legend(
-                    loc="best",
-                    fontsize=8
-                )
+                    dibujar(
+                        axs[0],
+                        lambda q: evaluar(xr, q),
+                        cortes,
+                        minimo,
+                        maximo,
+                        "royalblue",
+                        f"Superposición: t = {instante:.2f}"
+                    )
 
-                axs[0].set_xlabel(
-                    "Variable τ"
-                )
-
-                # ==============================
-                # GRAFICA 2: PRODUCTO
-                # ==============================
-
-                def prod(q):
-
-                    return (
-                        evaluar(xr, q)
-                        * evaluar(
+                    dibujar(
+                        axs[0],
+                        lambda q: evaluar(
                             kr,
                             q,
                             invertido=True
+                        ),
+                        cortes,
+                        minimo,
+                        maximo,
+                        "seagreen",
+                        f"Superposición: t = {instante:.2f}"
+                    )
+
+                    axs[0].plot(
+                        [],
+                        [],
+                        color="royalblue",
+                        label=f"{fijo}(τ): señal fija"
+                    )
+
+                    axs[0].plot(
+                        [],
+                        [],
+                        color="seagreen",
+                        label=f"{movil}(t−τ): señal móvil"
+                    )
+
+                    dibujar_impulsos(
+                        axs[0],
+                        xi,
+                        minimo,
+                        maximo,
+                        "royalblue",
+                        leyenda=False
+                    )
+
+                    dibujar_impulsos(
+                        axs[0],
+                        ki,
+                        minimo,
+                        maximo,
+                        "seagreen",
+                        leyenda=False
+                    )
+
+                    axs[0].legend(
+                        loc="best",
+                        fontsize=8
+                    )
+
+                    axs[0].set_xlabel(
+                        "Variable τ"
+                    )
+
+                    # ==========================
+                    # GRAFICA 2
+                    # PRODUCTO DE LAS SEÑALES
+                    # ==========================
+
+                    def prod(q):
+
+                        return (
+                            evaluar(xr, q)
+                            * evaluar(
+                                kr,
+                                q,
+                                invertido=True
+                            )
+                        )
+
+                    dibujar(
+                        axs[1],
+                        prod,
+                        cortes,
+                        minimo,
+                        maximo,
+                        "purple",
+                        "Producto de las partes regulares"
+                    )
+
+                    divisiones = sorted(
+                        set(
+                            [minimo, maximo]
+                            + [
+                                c
+                                for c in cortes
+                                if minimo < c < maximo
+                            ]
                         )
                     )
 
-                dibujar(
-                    axs[1],
-                    prod,
-                    cortes,
-                    minimo,
-                    maximo,
-                    "purple",
-                    "Producto de las partes regulares"
-                )
+                    for a, b in zip(
+                        divisiones[:-1],
+                        divisiones[1:]
+                    ):
 
-                divisiones = sorted(
-                    set(
-                        [minimo, maximo]
-                        + [
-                            c
-                            for c in cortes
-                            if minimo < c < maximo
-                        ]
+                        eps = (b - a) * 1e-8
+
+                        q = np.linspace(
+                            a + eps,
+                            b - eps,
+                            250
+                        )
+
+                        axs[1].fill_between(
+                            q,
+                            prod(q),
+                            alpha=0.20,
+                            color="purple"
+                        )
+
+                    axs[1].set_xlabel(
+                        "Variable τ"
                     )
+
+                    # ==========================
+                    # VALOR INSTANTANEO
+                    # ==========================
+
+                    if regular is not None:
+
+                        valor_actual = float(
+                            evaluar(
+                                regular,
+                                np.array([instante])
+                            )[0]
+                        )
+
+                    else:
+
+                        with warnings.catch_warnings():
+
+                            warnings.simplefilter(
+                                "error",
+                                IntegrationWarning
+                            )
+
+                            valor_actual = (
+                                convolucion_instante(
+                                    pares,
+                                    instante
+                                )
+                                + float(
+                                    evaluar(
+                                        extra,
+                                        np.array([instante])
+                                    )[0]
+                                )
+                            )
+
+                    # ==========================
+                    # GRAFICA 3
+                    # FORMACION DE CONVOLUCION
+                    # ==========================
+
+                    axs[2].plot(
+                        tiempos,
+                        valores,
+                        color="darkviolet",
+                        alpha=0.25
+                    )
+
+                    mask = tiempos < instante
+
+                    tx = np.r_[
+                        tiempos[mask],
+                        instante
+                    ]
+
+                    vy = np.r_[
+                        valores[mask],
+                        valor_actual
+                    ]
+
+                    axs[2].plot(
+                        tx,
+                        vy,
+                        color="darkviolet",
+                        lw=2
+                    )
+
+                    axs[2].axvline(
+                        instante,
+                        color="gray",
+                        ls="--"
+                    )
+
+                    axs[2].scatter(
+                        [instante],
+                        [valor_actual],
+                        color="darkviolet",
+                        zorder=6
+                    )
+
+                    axs[2].axhline(
+                        0,
+                        color="gray",
+                        lw=0.7
+                    )
+
+                    axs[2].set_title(
+                        "Formación de la convolución c(t)"
+                    )
+
+                    axs[2].set_xlabel(
+                        "Tiempo t"
+                    )
+
+                    axs[2].set_ylabel(
+                        "Amplitud"
+                    )
+
+                    axs[2].grid(
+                        alpha=0.25
+                    )
+
+                    configurar_eje_tiempo(
+                        axs[2],
+                        [],
+                        minimo,
+                        maximo
+                    )
+
+                    impulsos_visibles = [
+                        (p, w)
+                        for p, w in impulsos
+                        if float(p) <= instante
+                    ]
+
+                    dibujar_impulsos(
+                        axs[2],
+                        impulsos_visibles,
+                        minimo,
+                        maximo
+                    )
+
+                    preparar_figura(fig)
+
+                    st.pyplot(fig)
+
+                finally:
+
+                    plt.close(fig)
+
+                # ==============================
+                # RESULTADO INSTANTANEO
+                # ==============================
+
+                st.markdown(
+                    "#### Resultado instantáneo"
                 )
 
-                for a, b in zip(
-                    divisiones[:-1],
-                    divisiones[1:]
+                st.latex(
+                    r"c_{\mathrm{reg}}"
+                    + rf"({instante:g})"
+                    + "="
+                    + f"{valor_actual:.4f}"
+                )
+
+                for p, w in impulsos:
+
+                    if np.isclose(
+                        float(p),
+                        instante,
+                        rtol=0,
+                        atol=1e-9
+                    ):
+
+                        st.info(
+                            "En este instante existe "
+                            f"un impulso de peso {w}."
+                        )
+
+                # ==============================
+                # LIMITES DE INTEGRACION
+                # ==============================
+
+                st.markdown(
+                    "#### Límites de integración actuales"
+                )
+
+                filas = []
+
+                for i, (fx, a, b) in enumerate(
+                    x[0], 1
                 ):
 
-                    eps = (
-                        b - a
-                    ) * 1e-8
+                    for j, (fk, c, d) in enumerate(
+                        k[0], 1
+                    ):
 
-                    q = np.linspace(
-                        a + eps,
-                        b - eps,
-                        250
-                    )
+                        inferior = max(
+                            float(a),
+                            instante - float(d)
+                        )
 
-                    axs[1].fill_between(
-                        q,
-                        prod(q),
-                        alpha=0.20,
-                        color="purple"
-                    )
+                        superior = min(
+                            float(b),
+                            instante - float(c)
+                        )
 
-                axs[1].set_xlabel(
-                    "Variable τ"
-                )
+                        if inferior < superior:
 
-                # ==============================
-                # VALOR INSTANTANEO
-                # ==============================
+                            filas.append({
+                                "Tramo fijo": i,
+                                "Tramo móvil": j,
+                                "Límite inferior": (
+                                    f"{inferior:.4f}"
+                                    if np.isfinite(inferior)
+                                    else "-∞"
+                                ),
+                                "Límite superior": (
+                                    f"{superior:.4f}"
+                                    if np.isfinite(superior)
+                                    else "+∞"
+                                )
+                            })
 
-                if regular is not None:
+                if filas:
 
-                    valor_actual = float(
-                        evaluar(
-                            regular,
-                            np.array([instante])
-                        )[0]
-                    )
+                    st.table(filas)
 
                 else:
 
-                    with warnings.catch_warnings():
-
-                        warnings.simplefilter(
-                            "error",
-                            IntegrationWarning
-                        )
-
-                        valor_actual = (
-                            convolucion_instante(
-                                pares,
-                                instante
-                            )
-                            + float(
-                                evaluar(
-                                    extra,
-                                    np.array([instante])
-                                )[0]
-                            )
-                        )
-
-                # ==============================
-                # GRAFICA 3: CONVOLUCION
-                # ==============================
-
-                axs[2].plot(
-                    tiempos,
-                    valores,
-                    color="darkviolet",
-                    alpha=0.25
-                )
-
-                mask = tiempos <= instante
-
-                tx = np.r_[
-                    tiempos[mask],
-                    instante
-                ]
-
-                vy = np.r_[
-                    valores[mask],
-                    valor_actual
-                ]
-
-                axs[2].plot(
-                    tx,
-                    vy,
-                    color="darkviolet",
-                    lw=2
-                )
-
-                axs[2].axvline(
-                    instante,
-                    color="gray",
-                    ls="--"
-                )
-
-                axs[2].scatter(
-                    [instante],
-                    [valor_actual],
-                    color="darkviolet",
-                    zorder=6
-                )
-
-                axs[2].axhline(
-                    0,
-                    color="gray",
-                    lw=0.7
-                )
-
-                axs[2].set_title(
-                    "Formación de la convolución c(t)"
-                )
-
-                axs[2].set_xlabel(
-                    "Tiempo t"
-                )
-
-                axs[2].set_ylabel(
-                    "Amplitud"
-                )
-
-                axs[2].grid(
-                    alpha=0.25
-                )
-
-                configurar_eje_tiempo(
-                    axs[2],
-                    [],
-                    minimo,
-                    maximo
-                )
-
-                impulsos_visibles = [
-                    (p, w)
-                    for p, w in impulsos
-                    if float(p) <= instante
-                ]
-
-                dibujar_impulsos(
-                    axs[2],
-                    impulsos_visibles,
-                    minimo,
-                    maximo
-                )
-
-                preparar_figura(fig)
-
-                st.pyplot(fig)
-
-            finally:
-
-                plt.close(fig)
-
-            # ----------------------------------
-            # Resultado y limites sincronizados
-            # ----------------------------------
-
-            st.markdown(
-                "#### Resultado instantáneo"
-            )
-
-            st.latex(
-                r"c_{\mathrm{reg}}"
-                + rf"({instante:g})"
-                + "="
-                + f"{valor_actual:.4f}"
-            )
-
-            for p, w in impulsos:
-
-                if np.isclose(
-                    float(p),
-                    instante,
-                    rtol=0,
-                    atol=1e-9
-                ):
-
                     st.info(
-                        "En este instante existe "
-                        f"un impulso de peso {w}."
+                        "No existe superposición "
+                        "entre las partes regulares."
                     )
 
-            st.markdown(
-                "#### Límites de integración actuales"
-            )
+                if x[1] or k[1]:
 
-            filas = []
-
-            for i, (fx, a, b) in enumerate(
-                x[0], 1
-            ):
-
-                for j, (fk, c, d) in enumerate(
-                    k[0], 1
-                ):
-
-                    inferior = max(
-                        float(a),
-                        instante - float(d)
+                    st.caption(
+                        "Las contribuciones de los impulsos "
+                        "se calculan mediante las propiedades "
+                        "de Dirac."
                     )
 
-                    superior = min(
-                        float(b),
-                        instante - float(c)
-                    )
+            except Exception as error:
 
-                    if inferior < superior:
+                st.session_state[
+                    "sim_play"
+                ] = False
 
-                        filas.append({
-                            "Tramo fijo": i,
-                            "Tramo móvil": j,
-                            "Límite inferior": (
-                                f"{inferior:.4f}"
-                                if np.isfinite(inferior)
-                                else "-∞"
-                            ),
-                            "Límite superior": (
-                                f"{superior:.4f}"
-                                if np.isfinite(superior)
-                                else "+∞"
-                            )
-                        })
+                st.session_state[
+                    "sim_estado"
+                ] = "Error"
 
-            if filas:
-
-                st.table(filas)
-
-            else:
-
-                st.info(
-                    "No existe superposición "
-                    "entre las partes regulares."
+                st.error(
+                    "No se pudo representar "
+                    "este instante: "
+                    + str(error)
                 )
 
-            if x[1] or k[1]:
-
-                st.caption(
-                    "Las contribuciones de los "
-                    "impulsos se calculan mediante "
-                    "las propiedades de Dirac. "
-                    "La región sombreada representa "
-                    "solamente el producto regular."
-                )
+        # Ejecutar el fragmento siempre,
+        # sin importar el estado de reproduccion.
 
         panel_animacion()
 
         st.caption(
-            "La región sombreada corresponde "
-            "al producto de las partes regulares "
+            "La región sombreada representa "
+            "el producto de las partes regulares "
             "dentro de la ventana visible. "
             "Las regiones exteriores también "
             "pueden contribuir a la integral."
@@ -3209,7 +3172,6 @@ def simulador(
 
 
 # ==============================================
-# INTERFAZ PRINCIPAL
 # GUIA RAPIDA
 # ==============================================
 
@@ -3220,7 +3182,7 @@ with st.expander(
 
     st.markdown("""
 Escribe únicamente la expresión en función de **t**.
-Coloca los límites en los campos **Desde** y **Hasta**.
+Coloca sus límites en los campos **Desde** y **Hasta**.
 
 | Para ingresar | Escribe | Evita |
 |---|---|---|
@@ -3251,6 +3213,7 @@ Escribe **inf**, utilizando las letras:
 Para infinito negativo escribe **-inf**.
 
 También puedes utilizar `∞`, `-∞`, `oo` o `-oo`.
+
 En `oo` se utilizan dos letras o minúsculas,
 no dos números cero.
 
@@ -3261,8 +3224,7 @@ no dos números cero.
 - Fuera de los intervalos la señal vale cero.
 - Las funciones trigonométricas utilizan radianes.
 - Para representar saltos, crea tramos separados.
-- Para una señal formada solamente por impulsos,
-  selecciona 0 tramos.
+- Para ingresar solamente impulsos, selecciona 0 tramos.
 - Las integrales impropias deben converger.
 """)
 
@@ -3273,7 +3235,7 @@ no dos números cero.
 
 
 # ==============================================
-# INGRESO DE LAS SEÑALES
+# INGRESO DE SEÑALES
 # ==============================================
 
 col1, col2 = st.columns(2)
@@ -3297,25 +3259,17 @@ if x is None or k is None:
 
 st.divider()
 
-st.header(
-    "Expresiones analíticas"
-)
+st.header("Expresiones analíticas")
 
 c1, c2 = st.columns(2)
 
 with c1:
 
-    mostrar_formula(
-        "x",
-        *x
-    )
+    mostrar_formula("x", *x)
 
 with c2:
 
-    mostrar_formula(
-        "k",
-        *k
-    )
+    mostrar_formula("k", *k)
 
 
 # ==============================================
@@ -3324,9 +3278,7 @@ with c2:
 
 st.divider()
 
-st.header(
-    "Representación gráfica"
-)
+st.header("Representación gráfica")
 
 minimo, maximo = st.slider(
     "Intervalo de visualización",
@@ -3431,8 +3383,7 @@ except Exception as error:
 
 
 # ==============================================
-# MANIPULACION DE SEÑALES v0.7
-# FORMA GENERAL FACTORIZADA
+# MANIPULACION DE SEÑALES
 # ==============================================
 
 st.divider()
@@ -3467,13 +3418,13 @@ tres parámetros: **A, B y C**.
 - Si |B| > 1, existe compresión temporal.
 - Si 0 < |B| < 1, existe expansión temporal.
 - Si B < 0, existe inversión temporal.
-- Si B = 1, no existe escalamiento temporal.
+- Si |B| = 1, no existe escalamiento temporal.
 - B debe ser distinto de cero.
 
 ### Desplazamiento temporal C
 
-- Si C > 0, la señal se desplaza hacia la derecha.
-- Si C < 0, la señal se desplaza hacia la izquierda.
+- Si C > 0, desplazamiento hacia la derecha.
+- Si C < 0, desplazamiento hacia la izquierda.
 - Si C = 0, no existe desplazamiento temporal.
 
 ### Orden de las transformaciones
@@ -3483,9 +3434,6 @@ tres parámetros: **A, B y C**.
 3. Desplazar la señal mediante C.
 4. Aplicar el escalamiento de amplitud mediante A.
 5. Invertir la amplitud si A es negativo.
-
-El escalamiento y la inversión de amplitud
-pueden realizarse juntos.
 """)
 
     st.markdown(
@@ -3621,7 +3569,7 @@ pueden realizarse juntos.
 
 
 # ==============================================
-# EXPRESION GENERAL PERMANENTEMENTE VISIBLE
+# EXPRESION GENERAL VISIBLE
 # ==============================================
 
 nombre_transformar = st.selectbox(
@@ -3639,10 +3587,6 @@ st.latex(
     rf"\boxed{{y(t)=A\,{nombre_transformar}"
     r"[B(t-C)]}"
 )
-
-# ==============================================
-# NUEVOS NOMBRES DE LOS PARAMETROS
-# ==============================================
 
 c1, c2, c3 = st.columns(3)
 
@@ -3666,17 +3610,9 @@ texto_C = c3.text_input(
 
 try:
 
-    A = interpretar_limite(
-        texto_A
-    )
-
-    B = interpretar_limite(
-        texto_B
-    )
-
-    C = interpretar_limite(
-        texto_C
-    )
+    A = interpretar_limite(texto_A)
+    B = interpretar_limite(texto_B)
+    C = interpretar_limite(texto_C)
 
     if not all(
         v.is_finite
@@ -3714,10 +3650,6 @@ try:
             C
         )
     )
-
-    # ------------------------------------------
-    # Interpretacion de la manipulacion
-    # ------------------------------------------
 
     with st.expander(
         "Interpretación de la manipulación",
@@ -3802,15 +3734,9 @@ try:
         st.latex(
             r"B(t-C)="
             + sp.latex(
-                sp.expand(
-                    B * (t - C)
-                )
+                sp.expand(B * (t - C))
             )
         )
-
-    # ------------------------------------------
-    # Resultado analitico
-    # ------------------------------------------
 
     st.markdown(
         "#### Resultado analítico"
@@ -3821,10 +3747,6 @@ try:
         *transformada,
         invertido=(B < 0)
     )
-
-    # ------------------------------------------
-    # Representacion grafica
-    # ------------------------------------------
 
     st.markdown(
         "#### Representación gráfica"
@@ -3844,9 +3766,9 @@ try:
     if B < 0:
 
         st.caption(
-            "La inversión temporal cambia los "
-            "intervalos a abiertos por la izquierda "
-            "y cerrados por la derecha."
+            "La inversión temporal cambia "
+            "los intervalos a abiertos por la "
+            "izquierda y cerrados por la derecha."
         )
 
     st.caption(
@@ -4036,8 +3958,7 @@ if st.button(
                 "La derivada regular y los impulsos "
                 "se representan en una sola gráfica. "
                 "Las flechas indican el peso "
-                "de los impulsos, no una "
-                "amplitud finita."
+                "de los impulsos, no amplitudes finitas."
             )
 
         else:
@@ -4076,9 +3997,8 @@ if st.button(
             st.caption(
                 "La integral se acumula desde cero. "
                 "Las constantes se ajustan entre "
-                "los tramos regulares. Para los "
-                "impulsos se utiliza la convención "
-                "del escalón H(0)=1."
+                "los tramos regulares. Para impulsos "
+                "se utiliza la convención H(0)=1."
             )
 
     except Exception as error:
@@ -4092,9 +4012,7 @@ if st.button(
 
 st.divider()
 
-st.header(
-    "Convolución"
-)
+st.header("Convolución")
 
 movil = st.selectbox(
     "Selecciona la señal móvil",
@@ -4127,8 +4045,9 @@ st.latex(
     rf"{movil}(t-\tau)\,d\tau"
 )
 
+
 # ==============================================
-# PERSISTENCIA DE LOS RESULTADOS
+# PERSISTENCIA DE RESULTADOS
 # ==============================================
 
 clave = repr(
@@ -4141,15 +4060,19 @@ clave = repr(
     )
 )
 
-if st.session_state.get(
-    "conv_clave_activa"
-) != clave:
+if (
+    st.session_state.get(
+        "conv_clave_activa"
+    )
+    != clave
+):
 
     st.session_state["sim_play"] = False
 
-    st.session_state["conv_clave_activa"] = (
-        clave
-    )
+    st.session_state[
+        "conv_clave_activa"
+    ] = clave
+
 
 if st.button(
     "Calcular convolución",
@@ -4162,7 +4085,9 @@ if st.button(
             "Calculando convolución..."
         ):
 
-            st.session_state["sim_play"] = False
+            st.session_state[
+                "sim_play"
+            ] = False
 
             st.session_state.pop(
                 "sim_clave",
@@ -4202,15 +4127,20 @@ if st.button(
 
             cortes += fronteras(extra)
 
-            # Verificacion numerica de las
-            # integrales regulares.
-
             tiempos, valores_num = convolucion_numerica(
                 xf[0],
                 km[0],
                 minimo,
                 maximo,
                 cortes
+            )
+
+            referencia = (
+                valores_num
+                + evaluar(
+                    extra,
+                    tiempos
+                )
             )
 
             if regular is not None:
@@ -4223,14 +4153,6 @@ if st.button(
                 valores = evaluar(
                     regular,
                     tiempos
-                )
-
-                referencia = (
-                    valores_num
-                    + evaluar(
-                        extra,
-                        tiempos
-                    )
                 )
 
                 if not np.allclose(
@@ -4246,13 +4168,7 @@ if st.button(
 
             else:
 
-                valores = (
-                    valores_num
-                    + evaluar(
-                        extra,
-                        tiempos
-                    )
-                )
+                valores = referencia
 
             if not np.all(
                 np.isfinite(valores)
@@ -4263,7 +4179,7 @@ if st.button(
                     "valores finitos."
                 )
 
-            st.session_state["conv_v07"] = (
+            st.session_state["conv_v071"] = (
                 clave,
                 plan,
                 desarrollo,
@@ -4277,11 +4193,13 @@ if st.button(
     except Exception as error:
 
         st.session_state.pop(
-            "conv_v07",
+            "conv_v071",
             None
         )
 
-        st.session_state["sim_play"] = False
+        st.session_state[
+            "sim_play"
+        ] = False
 
         st.error(
             "No se pudo calcular "
@@ -4290,12 +4208,12 @@ if st.button(
 
 
 # ==============================================
-# RESULTADOS DE LA CONVOLUCION
+# RESULTADOS DE CONVOLUCION
 # ==============================================
 
 if (
-    "conv_v07" in st.session_state
-    and st.session_state["conv_v07"][0] == clave
+    "conv_v071" in st.session_state
+    and st.session_state["conv_v071"][0] == clave
 ):
 
     (
@@ -4307,7 +4225,7 @@ if (
         tiempos,
         valores,
         extra
-    ) = st.session_state["conv_v07"]
+    ) = st.session_state["conv_v071"]
 
     st.markdown(
         "### Resultado gráfico"
@@ -4364,9 +4282,7 @@ if (
                 "Amplitud"
             )
 
-            ax.grid(
-                alpha=0.25
-            )
+            ax.grid(alpha=0.25)
 
             configurar_eje_tiempo(
                 ax,
@@ -4429,9 +4345,7 @@ if (
                 imp
             )
 
-    # ------------------------------------------
-    # Desarrollo matematico desplegable
-    # ------------------------------------------
+    # Desarrollo matematico desplegable.
 
     mostrar_desarrollo(
         plan,
@@ -4442,9 +4356,7 @@ if (
         km
     )
 
-    # ------------------------------------------
-    # Simulador interactivo con STOP
-    # ------------------------------------------
+    # Simulador corregido.
 
     simulador(
         xf,
@@ -4469,7 +4381,7 @@ if (
 st.divider()
 
 st.caption(
-    "CONVOLAB Web v0.7 | "
+    "CONVOLAB Web v0.7.1 | "
     "Proyecto académico de señales continuas | "
     "ig: vax._.07"
 )
